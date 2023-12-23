@@ -7,6 +7,6 @@ const paymentcontroller = require("../controllers/payforproduct");
 router.post("/pay",paymentcontroller.payforproduct);
 router.post("/webhook",authenticationMiddleware,paymentcontroller.webhookforproduct);
 router.post("/:findPurchaseByRefrence",paymentcontroller.findpurchase);
-router.post('/pay-for-cart/:email',paymentcontroller.payforcart);
+//router.post('/pay-for-cart/:email',paymentcontroller.payforcart);
 
 module.exports=router;

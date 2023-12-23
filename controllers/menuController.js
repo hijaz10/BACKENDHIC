@@ -100,7 +100,7 @@ function updateproductbyId(req, res, next) {
         try {
           const { productName } = req.params;
 
-          const foundProduct = await MenuModel.findOne({ product: productName }, { price: 1 });
+          const foundProduct = await MenuModel.find({ product: productName }, { price: 1 });
       
           if (foundProduct) {
             res.json({ product: productName, price: foundProduct.price, remaining:foundProduct.remaining, company_name:foundProduct.company_name});
