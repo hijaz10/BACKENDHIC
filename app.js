@@ -22,8 +22,9 @@ app.get('/', (req, res, next) => {
     res.send('Hello, Welcome');
 });
 
+
 // Connect to MongoDB
-mongoose.connect('mongodb://127.0.0.1:27017/hic').then((done) => {
+mongoose.connect(process.env.MONGO).then((done) => {
     console.log('DB connection was successful');
 
     // Set up routes
