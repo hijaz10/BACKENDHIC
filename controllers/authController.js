@@ -142,34 +142,44 @@ const loginAsAdmin = async (req, res, next) => {
 
 
 
-function login(req, res, next) {
-    let email = req.body.email;
-    let password = req.body.password;
+const bcrypt = require('bcrypt');
 
-    UserModel.findOne({ email })
-        .then(async (user) => {
-            if (!user) {
-                res.status(404).json({
-                    message: "user not found",
-                });
-            } else {
-                const match = await bcrypt.compare(password, user.password);
-                if (match) {
-                    user.password = "";
-                    res.status(200).json(user);
-                } else {
-                    res.status  (401).json({
-                        message: "you entered a wrong password",
-                    });
-                }
-            }
-        })
-        .catch((err) => {
-            res.status(500).json({
-                message: "unknown error occurred",
+async function login(req, res, next) {
+    try {
+        let email = req.body.email;
+        let password = req.body.password;
+
+        // Find the user by email
+        const user = await UserModel.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found",
             });
+        }
+
+        // Compare the provided password with the hashed password from the database
+        const match = await bcrypt.compare(password, user.password);
+
+        if (match) {
+            // If the passwords match, clear the password field before sending the user object
+            user.password = "";
+            return res.status(200).json(user);
+        } else {
+            // If passwords don't match, return a 401 Unauthorized response
+            return res.status(401).json({
+                message: "Incorrect password",
+            });
+        }
+    } catch (err) {
+        // Handle any unexpected errors
+        console.error("Error during login:", err);
+        return res.status(500).json({
+            message: "Unknown error occurred",
         });
+    }
 }
+
 function changePassword(req, res, next) {
     var email = req.body.email;
     let newPassword = req.body.password;
