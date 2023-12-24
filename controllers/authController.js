@@ -2,6 +2,7 @@
 require("dotenv").config();
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto")
 const jwt = require ("jsonwebtoken")
 const UserModel = require('../models/userModel');
 const sellers = require('../models/sellersmodel');
@@ -206,6 +207,7 @@ async function forgotPassword(req, res, next) {
                 message: "No email found, please check your email and try again",
             });
         }
+        
 
         let transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
