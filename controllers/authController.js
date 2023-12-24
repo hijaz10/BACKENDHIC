@@ -140,7 +140,7 @@ const loginAsAdmin = async (req, res, next) => {
         );
         
 */
-
+////
 const login = async (req, res, next) => {
     try {
         let email = req.body.email;
@@ -167,7 +167,7 @@ const login = async (req, res, next) => {
     }
 };
 
-
+///
 async function changePassword(req, res, next) {
     try {
         const email = req.body.email;
@@ -274,7 +274,7 @@ async function forgotPassword(req, res, next) {
     }
 }
 
-
+////////
 async function changeforgetpass(req, res, next) {
     try {
         const userEmail = req.body.email;
@@ -343,18 +343,18 @@ function findbyid(req, res, next) {
 }
 
 function updateuserinfo(req, res, next) {
-        let email = req.body.email;
+        let name = req.body.name;
         let newData = {};
 
-        if (req.body.hasOwnProperty("name")) {
-            newData.name = req.body.name;
+        if (req.body.hasOwnProperty("email")) {
+            newData.email = req.body.email;
         }
 
         if (req.body.hasOwnProperty("password")) {
             newData.password = req.body.password;
         }
 
-        UserModel.updateOne({ email }, newData)
+        UserModel.updateOne({ name }, newData)
             .then((done) => {
                 let message = "Update was successful";
                 if (done.hasOwnProperty("modifiedCount") && done.modifiedCount == 0) {
