@@ -7,20 +7,14 @@ const jwt = require ("jsonwebtoken")
 const UserModel = require('../models/userModel');
 const sellers = require('../models/sellersmodel');
 const Admins = require('../models/Adminsmodel');
+const TokenModel = require('../models/tokenModel');
 
 async function register(req, res, next) {
     try {
-        let name = req.body.name;
-        let email = req.body.email;
-        let password = req.body.password;
+        const { name, email, password } = req.body;
 
         // Hash the password using bcrypt
-        const hashedPassword = await new Promise((resolve, reject) => {
-            bcrypt.hash(password, 10, (err, hash) => {
-                if (err) reject(err);
-                resolve(hash);
-            });
-        });
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create a new user with the hashed password
         const user = await UserModel.create({
@@ -48,6 +42,7 @@ async function register(req, res, next) {
         });
     }
 }
+
 
 
 const registerAsAdmin = async (req, res, next) => {
@@ -81,6 +76,7 @@ const registerseller = async (req, res, next) => {
         let password = req.body.password;
         let company = req.body.company;
         let location = req.body.location;
+        let name = req.body.name;
 
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -90,6 +86,7 @@ const registerseller = async (req, res, next) => {
             password: hashedPassword, // Save the hashed password
             company,
             location,
+            name,
         };
 
         const addedsellers = await sellers.create(sellersData);
@@ -171,43 +168,75 @@ const login = async (req, res, next) => {
 };
 
 
-function changePassword(req, res, next) {
-    var email = req.body.email;
-    let newPassword = req.body.password;
-    
-    UserModel.updateOne({ email }, { password: newPassword })
-        .then((done) => {
-            if (done.nModified === 0) {
-                res.status(200).json({
-                    message: "Update was successful, but no modification was made. Please enter a different password.",
-                });
-            } else {
-                res.status(200).json({
-                    message: "Password change was successful",
-                });
-            }
-        })
-        .catch((err) => {
-            res.status(500).json({
-                message: "Unknown error occurred",
-                err,
-            });
-        });
-}
-async function forgotPassword(req, res, next) {
+async function changePassword(req, res, next) {
     try {
-        let userEmail = req.body.email;
-        let newPassword = req.body.password;
+        const email = req.body.email;
+        const oldPassword = req.body.oldPassword;
+        const newPassword = req.body.newPassword;
 
-        const token = crypto.randomBytes(10).toString("hex");
+        // Fetch the user from the database
+        const user = await UserModel.findOne({ email });
 
-        verifyemail = await UserModel.findOne({userEmail})
-        if (!verifyemail) {
-            return res.status(500).json({
-                message: "No email found, please check your email and try again",
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found",
             });
         }
-        
+
+        // Compare the old password with the hashed password from the database
+        const isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
+
+        if (!isOldPasswordCorrect) {
+            return res.status(401).json({
+                message: "Incorrect old password",
+            });
+        }
+
+        // Hash the new password
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update the password in the database
+        const updateResult = await UserModel.updateOne({ email }, { password: hashedNewPassword });
+
+        if (updateResult.nModified === 0) {
+            return res.status(200).json({
+                message: "Update was successful, but no modification was made. Please enter a different password.",
+            });
+        } else {
+            return res.status(200).json({
+                message: "Password change was successful",
+            });
+        }
+    } catch (err) {
+        console.error("Error during password change:", err);
+        return res.status(500).json({
+            message: "Unknown error occurred",
+            error: err,
+        });
+    }
+}
+
+async function forgotPassword(req, res, next) {
+    function generateSixDigitToken() {
+        const min = 100000; 
+        const max = 999999; 
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    try {
+        const userEmail = req.body.email;
+        const newPassword = req.body.password;
+
+        const token = generateSixDigitToken();
+        const expirationTime = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes expiration
+
+        const user = await UserModel.findOne({ email: userEmail });
+
+        if (!user) {
+            return res.status(404).json({
+                message: "No user found with this email address",
+            });
+        }
 
         let transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
@@ -215,7 +244,7 @@ async function forgotPassword(req, res, next) {
             secure: true,
             auth: {
                 type: "OAuth2",
-                user: process.env.USER,
+                user: process.env.USER, 
                 accessToken: process.env.PASS,
             },
         });
@@ -224,19 +253,18 @@ async function forgotPassword(req, res, next) {
             from: "backendtesting10",
             to: userEmail,
             subject: "Password Reset Request",
-            text: `You have requested a password reset. Click on the following link to reset your password: http://localhost:2000/change-forgotpassword?token=${token}`,
+            text: ` (${token})   You have requested a password reset. Click on the following link to reset your password: http://localhost:2000/change-forgotpassword?token=${token}`,
         };
 
-        // Send email
         const emailResponse = await transporter.sendMail(mail);
 
-        // Update user password
-        await UserModel.updateOne({ email: userEmail }, { password: newPassword });
-
-        return res.status(200).json({
-            message: "Password reset successfully",
-            emailResponse,
+        res.status(200).json({
+            message: "Password reset email sent successfully",
         });
+
+        // Save the token and expiration time to the database
+        await TokenModel.create({ token, userId: user._id, email: userEmail, expirationTime });
+
     } catch (error) {
         console.error(error);
         return res.status(500).json({
@@ -246,36 +274,57 @@ async function forgotPassword(req, res, next) {
     }
 }
 
-function changeforgetpass(req, res, next) {
-    app.post("/change-forgotpassword", (req, res, next) => {
-        let userEmail = req.body.email;
-        let newPassword = req.body.password;
-        let token = req.body.token;
 
-        TokenModel.findOne({ userEmail, token })
-            .then((done) => {
-                if (done && done.userEmail === userEmail && done.token === token) {
-                    return UserModel.updateOne({ userEmail }, { password: newPassword });
-                } else {
-                    return res.status(401).json({
-                        message: "Invalid token or email",
-                    });
-                }
-            })
-            .then((updateResponse) => {
-                return res.status(200).json({
-                    message: "Password reset successfully",
-                    updateResponse,
-                });
-            })
-            .catch((error) => {
-                return res.status(500).json({
-                    message: "Unknown error occurred",
-                    error: error.message,
-                });
+async function changeforgetpass(req, res, next) {
+    try {
+        const userEmail = req.body.email;
+        const newPassword = req.body.password;
+        const token = req.body.token;
+
+        const tokenData = await TokenModel.findOne({ email: userEmail });
+
+        if (!tokenData) {
+            return res.status(404).json({
+                message: "Incorrect Token",
             });
-    });
+        }
+
+        const now = new Date();
+        const tokenExpirationTime = new Date(tokenData.expirationTime);
+
+        if (now > tokenExpirationTime) {
+            return res.status(401).json({
+                message: "Token has expired",
+            });
+        }
+
+        // Token is valid, update the user's password
+        const updateResponse = await UserModel.updateOne({ email: userEmail }, { password: newPassword });
+
+         if(updateResponse){
+            res.status(200).json({
+            message: "Password reset successfully",
+            updateResponse,
+        })}
+        else{
+            res.status(200).json({
+                message: "Password reset Was not successfully",
+                updateResponse,
+            })
+        }
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: "Unknown error occurred",
+            error: error.message,
+        });
+    }
 }
+
+
+
+
 
 function findbyid(req, res, next) {
     const id = req.params.id;

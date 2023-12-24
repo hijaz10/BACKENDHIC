@@ -11,4 +11,3 @@ const AdminsSchema = new mongoose.Schema({
 const Admins = mongoose.model('Admins', AdminsSchema);
 
 module.exports = Admins;
-//657a0650230f7d5bbde9da63

@@ -32,7 +32,7 @@ mongoose.connect(process.env.MONGO).then((done) => {
     app.use('/menu', menuRoutes)
     app.use("/payment",paymentRoutes)
     app.use("/pay",payproductroute)
-    app.use("report",report)
+    app.use("/report",report)
 
     // Start the server
     app.listen(port, () => {

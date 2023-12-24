@@ -1,54 +1,45 @@
-const Faileddelivery = require("../models/Complainsmodel")
-const reportcompany = require("../models/Complainsmodel")
+const Faileddelivery = require("../models/Complainsmodel");
+const reportcompany = require("../models/Complainsmodel");
 
-const Faileddeliverycomplains = async(res,req,next) => {
-    let email= req.body.email
-    let message = req.body.message
+/////////////////////////////////////////////////////////
 
-    const data = {
-        email,
-        message,
-    }
-    const addeddata = await Faileddelivery.create(data)
-    .then((done) => {
-        if(done){
-            res.status(200).json({message:"We have recieved Your complain and we are reviewing it...", addeddata})
-        }
-        else{
-            res.status(500).json({message:"Unable to report your complains please try again,Thank You..."})
-        }
-    })
-    .catch((err)=>{
-        res.status(500).json({message:"Unknown Error Ocuured"})
-    })
-}
-
-const reportcompanycomplains = async (res,req,next) => {
-    let email= req.body.email
-    let message = req.body.message
+const Faileddeliverycomplains = async (req, res, next) => {
+    let email = req.body.email;
+    let message = req.body.message;
 
     const data = {
         email,
         message,
+    };
+
+    try {
+        const addeddata = await Faileddelivery.create(data);
+        res.status(200).json({ message: "We have received Your complain and we are reviewing it...", addeddata });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Unable to report your complaints, please try again. Thank You..." });
     }
-    const addeddata = await reportcompany.create(data)
-    .then((done) => {
-        if(done){
-            res.status(200).json({message:"We have recieved Your complain and we are reviewing it...", addeddata})
-        }
-        else{
-            res.status(500).json({message:"Unable to report your complains please try again,Thank You..."})
-        }
-    })
-    .catch((err)=>{
-        res.status(500).json({message:"Unknown Error Ocuured"})
-    })
-}
+};
 
+const reportcompanycomplains = async (req, res, next) => {
+    let email = req.body.email;
+    let message = req.body.message;
 
+    const data = {
+        email,
+        message,
+    };
 
+    try {
+        const addeddata = await reportcompany.create(data);
+        res.status(200).json({ message: "We have received Your complain and we are reviewing it...", addeddata });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Unable to report your complaints, please try again. Thank You..." });
+    }
+};
 
 module.exports = {
     Faileddeliverycomplains,
     reportcompanycomplains,
-}
+};

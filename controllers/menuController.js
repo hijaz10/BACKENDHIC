@@ -38,7 +38,7 @@ const Addproduct = async (req, res, next) => {
             const addedMenu = await MenuModel.create(menuData);
 
             return res.status(200).json({
-                message: "Product item added successfully",
+                message: "Product item added successfully\nPLEASE DO NOT SHARE YOUR PRODUCT ID AS YOU WILL BE NEEDING IT TO UPDATE YOUR PRODUCT.",
                 product: addedMenu,
             });
         } else {
@@ -57,14 +57,9 @@ const Addproduct = async (req, res, next) => {
 
 function updateproductbyId(req, res, next) {
         let id = req.params.id;
-        let email= req.body.email
-
         var updatedMenu = req.body;
-      const verifyseller = sellers.findOne({id})
-      if(!verifyseller){
-        return res.status(404).json({message:"Seller not found"})
-      }
-      else{
+      
+      
         MenuModel.findById(id)
             .then((menu) => {
                 if (!menu) {
@@ -79,13 +74,8 @@ function updateproductbyId(req, res, next) {
                         });
                 }
             })
-            .catch((err) => {
-                res.status(500).json({ message: "Unknown error occurred", err });
-            });
-      }
-        
-    };
 
+      };
 
     const listproducts = async (req, res, next) => {
         try {
@@ -100,10 +90,10 @@ function updateproductbyId(req, res, next) {
         try {
           const { productName } = req.params;
 
-          const foundProduct = await MenuModel.find({ product: productName }, { price: 1 });
+          const foundProduct = await MenuModel.find({ product: productName }).select("-_id -user");
       
           if (foundProduct) {
-            res.json({ product: productName, price: foundProduct.price, remaining:foundProduct.remaining, company_name:foundProduct.company_name});
+            res.json({ foundProduct });
           } else {
             res.status(404).json({ message: `Product ${productName} not found` });
           }
