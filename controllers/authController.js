@@ -7,44 +7,47 @@ const UserModel = require('../models/userModel');
 const sellers = require('../models/sellersmodel');
 const Admins = require('../models/Adminsmodel');
 
+async function register(req, res, next) {
+    try {
+        let name = req.body.name;
+        let email = req.body.email;
+        let password = req.body.password;
 
-function register(req, res, next) {
-    let name = req.body.name;
-    let email = req.body.email;
-    let password = req.body.password;
-
-    // Hash the password
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-        if (err) {
-            return res.status(500).json({
-                message: 'Error hashing the password',
-                err: err,
+        // Hash the password using bcrypt
+        const hashedPassword = await new Promise((resolve, reject) => {
+            bcrypt.hash(password, 10, (err, hash) => {
+                if (err) reject(err);
+                resolve(hash);
             });
-        }
+        });
 
-        UserModel.create({
+        // Create a new user with the hashed password
+        const user = await UserModel.create({
             name,
             email,
-            password: hashedPassword, // Save the hashed password
-        })
-            .then((done) => {
-                res.status(200).json({
-                    message: 'Registration was successful',
-                });
-            })
-            .catch((err) => {
-                let msg = err;
-                if (err.code === 11000) {
-                    msg = 'Email has been used by another user, please change your email address';
-                }
+            password: hashedPassword,
+        });
 
-                res.status(500).json({
-                    message: 'Registration was not successful',
-                    err: msg,
-                });
-            });
-    });
+        res.status(200).json({
+            message: 'Registration was successful',
+            user: {
+                name: user.name,
+                email: user.email,
+            },
+        });
+    } catch (err) {
+        let msg = err;
+        if (err.code === 11000) {
+            msg = 'Email has been used by another user, please change your email address';
+        }
+
+        res.status(500).json({
+            message: 'Registration was not successful',
+            error: msg,
+        });
+    }
 }
+
 
 const registerAsAdmin = async (req, res, next) => {
     try {
@@ -140,45 +143,32 @@ const loginAsAdmin = async (req, res, next) => {
         
 */
 
-
-
-const bcrypt = require('bcrypt');
-
-async function login(req, res, next) {
+const login = async (req, res, next) => {
     try {
         let email = req.body.email;
         let password = req.body.password;
 
-        // Find the user by email
-        const user = await UserModel.findOne({ email });
+        const finduser = await UserModel.findOne({ email });
 
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found",
-            });
-        }
-
-        // Compare the provided password with the hashed password from the database
-        const match = await bcrypt.compare(password, user.password);
-
-        if (match) {
-            // If the passwords match, clear the password field before sending the user object
-            user.password = "";
-            return res.status(200).json(user);
+        if (!finduser) {
+            res.status(400).json({ message: "You are not a user,PLEASE REGISTER" });
         } else {
-            // If passwords don't match, return a 401 Unauthorized response
-            return res.status(401).json({
-                message: "Incorrect password",
-            });
-        }
-    } catch (err) {
-        // Handle any unexpected errors
-        console.error("Error during login:", err);
-        return res.status(500).json({
-            message: "Unknown error occurred",
-        });
+            // Compare the provided password with the hashed password in the database
+            const passwordMatch = await bcrypt.compare(password, finduser.password);
+
+            if (!passwordMatch) {
+                res.status(400).json({ message: "Incorrect password" });
+            } else {
+                res.status(200).json({
+                    message: "LogIn Succesfull",finduser});
+            }
+        } 
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Unknown error occured" });
     }
-}
+};
+
 
 function changePassword(req, res, next) {
     var email = req.body.email;
