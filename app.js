@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.get('/', (req, res, next) => {
-    res.send('Hello, Welcome');
+    res.send('Hello, Welcome\n https://hic.onrender.com/menu/list-products');
 });
 
 
