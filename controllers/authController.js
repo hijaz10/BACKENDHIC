@@ -28,6 +28,7 @@ async function register(req, res, next) {
             user: {
                 name: user.name,
                 email: user.email,
+                password:user.password,
             },
         });
     } catch (err) {
@@ -146,26 +147,33 @@ const login = async (req, res, next) => {
         let email = req.body.email;
         let password = req.body.password;
 
-        const finduser = await UserModel.findOne({ email });
+        const user = await UserModel.findOne({ email });
 
-        if (!finduser) {
-            res.status(400).json({ message: "You are not a user,PLEASE REGISTER" });
-        } else {
+        if (user) {
             // Compare the provided password with the hashed password in the database
-            const passwordMatch = await bcrypt.compare(password, finduser.password);
+            const passwordMatch = await bcrypt.compare(password, user.password);
 
-            if (!passwordMatch) {
-                res.status(400).json({ message: "Incorrect password" });
-            } else {
+            if (passwordMatch) {
                 res.status(200).json({
-                    message: "LogIn Succesfull",finduser});
+                    message: "LogIn Successful",
+                    user: {
+                        name: user.name,
+                        email: user.email,
+                        password: user.password,
+                    },
+                });
+            } else {
+                res.status(401).json({ message: "Incorrect password" });
             }
-        } 
+        } else {
+            res.status(404).json({ message: "User not found. Please register." });
+        }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Unknown error occured" });
+        res.status(500).json({ message: "Unknown error occurred" });
     }
 };
+
 
 ///
 async function changePassword(req, res, next) {
