@@ -9,8 +9,8 @@ router.post('/register', authController.register)
 router.post('/registerseller',authenticationMiddleware, authController.registerseller)
 router.post('/registerAdmins',authenticationMiddleware, authController.registerAsAdmin)
 router.post('/loginAsAdmin', authController.loginAsAdmin)
-router.post('/login', authController.login);//
-router.patch('/change-password', authController.changePassword);//
+router.post('/login', authController.login)
+router.patch('/change-password', authController.changePassword)
 router.post('/forgot-password', authController.forgotPassword)
 router.patch('/change-forgotpassword', authController.changeforgetpass);//
 router.post('/:id',authenticationMiddleware, authController.findbyid)

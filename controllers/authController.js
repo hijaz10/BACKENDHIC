@@ -312,12 +312,11 @@ async function changeforgetpass(req, res, next) {
          if(updateResponse){
             res.status(200).json({
             message: "Password reset successfully",
-            updateResponse,
         })}
         else{
             res.status(200).json({
                 message: "Password reset Was not successfully",
-                updateResponse,
+                
             })
         }
 

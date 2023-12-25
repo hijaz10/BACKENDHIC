@@ -1,7 +1,6 @@
-const Faileddelivery = require("../models/Complainsmodel");
-const reportcompany = require("../models/Complainsmodel");
+const Faileddelivery = require("../models/faileddelivery");
+const reportcompany = require("../models/reportcompany");
 
-/////////////////////////////////////////////////////////
 
 const Faileddeliverycomplains = async (req, res, next) => {
     let email = req.body.email;
