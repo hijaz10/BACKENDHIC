@@ -79,7 +79,7 @@ function updateproductbyId(req, res, next) {
 
     const listproducts = async (req, res, next) => {
         try {
-            const productsList = await MenuModel.find().select('product price remaining company_name');
+            const productsList = await MenuModel.find().select("-_id -user");
             res.status(200).json({ productsList});
         } catch (err) {
             res.status(500).json({ message: "Unknown error occurred", err });
@@ -93,7 +93,7 @@ function updateproductbyId(req, res, next) {
           const foundProduct = await MenuModel.find({ product: productName }).select("-_id -user");
       
           if (foundProduct) {
-            res.json({ foundProduct });
+            res.json({ foundProduct })
           } else {
             res.status(404).json({ message: `Product ${productName} not found` });
           }
@@ -131,7 +131,7 @@ const addToCart = async (req, res, next) => {
           const email = req.body.email;
           const quantity = req.body.quantity;
       
-          const menuProduct = await MenuModel.findOne({ product });
+          const menuProduct = await MenuModel.findOne({ product }).select("-_id -user");
           if (!menuProduct) {
             return res.status(404).json({ message: 'Product not found' });
           }
@@ -157,7 +157,7 @@ const getCart = async (req, res, next) => {
           const email = req.params.email; // Assuming the user's email is part of the URL parameters
       
           // Find all cart items for the specified user
-          const cartItems = await CartItem.find({ email });
+          const cartItems = await CartItem.find({ email }).select("-_id -user");
       
           if (!cartItems || cartItems.length === 0) {
             return res.status(404).json({ message: 'Cart is empty ' });

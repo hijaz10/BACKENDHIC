@@ -15,7 +15,7 @@ router.post('/forgot-password', authController.forgotPassword)
 router.patch('/change-forgotpassword', authController.changeforgetpass);//
 router.post('/:id',authenticationMiddleware, authController.findbyid)
 router.patch('/updateinfo', authController.updateuserinfo)
-router.delete("/deleteuser",authController.deleteuser)
+router.delete("/deleteuser",authController.deleteuser) 
 
 
 module.exports = router;
